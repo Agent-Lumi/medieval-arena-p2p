@@ -215,38 +215,62 @@ async function joinGame() {
         // Initialize peer
         state.peer = await initPeer();
         
-        // Connect to host
-        const conn = state.peer.connect(code, {
-            reliable: true,
-            serialization: 'json'
-        });
+        // Wait a moment for peer to be fully ready
+        await new Promise(resolve => setTimeout(resolve, 500));
         
-        conn.on('open', () => {
-            console.log('Connected to host:', code);
-            state.connections.set(code, conn);
+        // Try to connect with retry logic
+        let conn = null;
+        let connected = false;
+        let attempts = 0;
+        const maxAttempts = 3;
+        
+        while (!connected && attempts < maxAttempts) {
+            attempts++;
+            console.log(`Connection attempt ${attempts}/${maxAttempts}...`);
             
-            // Create local player
-            createLocalPlayer();
-            
-            // Send join request
-            sendToPeer(code, {
-                type: 'player_join',
-                data: {
-                    id: state.myPeerId,
-                    ...getPlayerData(state.localPlayer)
+            try {
+                conn = state.peer.connect(code, {
+                    reliable: true,
+                    serialization: 'json',
+                    metadata: { playerId: state.myPeerId }
+                });
+                
+                // Wait for connection with timeout
+                await new Promise((resolve, reject) => {
+                    const timeout = setTimeout(() => {
+                        reject(new Error('Connection timeout'));
+                    }, 5000);
+                    
+                    conn.on('open', () => {
+                        clearTimeout(timeout);
+                        connected = true;
+                        resolve();
+                    });
+                    
+                    conn.on('error', (err) => {
+                        clearTimeout(timeout);
+                        reject(err);
+                    });
+                });
+                
+            } catch (err) {
+                console.warn(`Attempt ${attempts} failed:`, err.message);
+                if (attempts < maxAttempts) {
+                    showStatus(`Retrying connection... (${attempts}/${maxAttempts})`);
+                    await new Promise(resolve => setTimeout(resolve, 2000));
                 }
-            });
-            
-            // Update UI
-            elements.displayRoomCode.textContent = state.roomCode;
-            elements.gameRoomCode.textContent = state.roomCode;
-            
-            hideStatus();
-            switchScreen('lobby');
-            
-            addSystemMessage('Joined game! Waiting for host to start...');
-        });
+            }
+        }
         
+        if (!connected) {
+            throw new Error('Failed to connect after multiple attempts');
+        }
+        
+        // Connection established
+        console.log('Connected to host:', code);
+        state.connections.set(code, conn);
+        
+        // Setup connection handlers
         conn.on('data', (data) => {
             handlePeerData(code, data);
         });
@@ -257,14 +281,36 @@ async function joinGame() {
         
         conn.on('error', (err) => {
             console.error('Connection error:', err);
-            showStatus('Failed to connect. Check the room code and try again.');
-            setTimeout(hideStatus, 3000);
         });
+        
+        // Create local player
+        createLocalPlayer();
+        
+        // Send join request
+        sendToPeer(code, {
+            type: 'player_join',
+            data: {
+                id: state.myPeerId,
+                ...getPlayerData(state.localPlayer)
+            }
+        });
+        
+        // Update UI
+        elements.displayRoomCode.textContent = state.roomCode;
+        elements.gameRoomCode.textContent = state.roomCode;
+        
+        hideStatus();
+        switchScreen('lobby');
+        
+        addSystemMessage('Joined game! Waiting for host to start...');
         
     } catch (err) {
         console.error('Failed to join game:', err);
-        showStatus('Failed to join game. Please try again.');
-        setTimeout(hideStatus, 3000);
+        showStatus('Failed to connect. Check the room code and try again.');
+        setTimeout(() => {
+            hideStatus();
+            cleanup();
+        }, 3000);
     }
 }
 
