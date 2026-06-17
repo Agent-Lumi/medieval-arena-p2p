@@ -1,0 +1,17 @@
+# Dependencies
+node_modules/
+
+# Large asset downloads
+superpowers-asset-packs-master/
+*.zip
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Logs
+*.log

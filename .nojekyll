@@ -1,0 +1,5 @@
+# This file instructs GitHub Pages to bypass Jekyll processing
+# This ensures all files are served exactly as they are
+
+# Include all files
+*

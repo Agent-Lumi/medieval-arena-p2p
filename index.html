@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Medieval Arena P2P - Multiplayer Battle</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="game-container">
+        <!-- Main Menu -->
+        <div id="menu-screen" class="screen active">
+            <div class="title-container">
+                <h1 class="game-title">⚔️ Medieval Arena P2P</h1>
+                <p class="subtitle">Peer-to-Peer Multiplayer Battle</p>
+            </div>
+            
+            <div class="menu-content">
+                <div class="menu-section">
+                    <h2>Create Game</h2>
+                    <p>Host a new arena and invite friends</p>
+                    <button id="btn-create" class="btn btn-primary">Create Game</button>
+                </div>
+                
+                <div class="menu-section">
+                    <h2>Join Game</h2>
+                    <p>Enter a room code to join</p>
+                    <input type="text" id="room-code-input" placeholder="Enter Room Code" maxlength="8">
+                    <button id="btn-join" class="btn btn-secondary">Join Game</button>
+                </div>
+            </div>
+            
+            <div class="instructions">
+                <h3>Controls</h3>
+                <p><span class="key">WASD</span> / <span class="key">Arrows</span> - Move</p>
+                <p><span class="key">SPACE</span> - Attack</p>
+                <p><span class="key">Enter</span> - Chat</p>
+            </div>
+        </div>
+        
+        <!-- Lobby Screen -->
+        <div id="lobby-screen" class="screen">
+            <div class="lobby-header">
+                <h2>Game Lobby</h2>
+                <div class="room-code-container">
+                    <span class="label">Room Code:</span>
+                    <span id="display-room-code" class="room-code">------</span>
+                    <button id="btn-copy-code" class="btn btn-small">Copy</button>
+                </div>
+            </div>
+            
+            <div class="players-list" id="players-list">
+                <h3>Players (1/4)</h3>
+                <ul id="connected-players"></ul>
+            </div>
+            
+            <div class="lobby-actions">
+                <p class="waiting-msg">Waiting for players...</p>
+                <button id="btn-start" class="btn btn-primary" disabled>Start Game</button>
+                <button id="btn-leave-lobby" class="btn btn-danger">Leave</button>
+            </div>
+        </div>
+        
+        <!-- Game Screen -->
+        <div id="game-screen" class="screen">
+            <div class="game-ui">
+                <div class="top-bar">
+                    <div class="health-bar-container">
+                        <div id="player-health-bar" class="health-bar">
+                            <div class="health-fill"></div>
+                        </div>
+                        <span id="health-text">100/100</span>
+                    </div>
+                    <div class="room-info">
+                        Room: <span id="game-room-code">------</span>
+                        <span id="player-count">1/4</span>
+                    </div>
+                </div>
+                
+                <div class="chat-container">
+                    <div id="chat-messages" class="chat-messages"></div>
+                    <input type="text" id="chat-input" placeholder="Press Enter to chat..." maxlength="50">
+                </div>
+                
+                <div class="game-controls">
+                    <button id="btn-toggle-chat" class="btn btn-small">💬</button>
+                    <button id="btn-leave-game" class="btn btn-danger btn-small">Leave</button>
+                </div>
+            </div>
+            
+            <canvas id="game-canvas"></canvas>
+        </div>
+        
+        <!-- Connection Status -->
+        <div id="connection-status" class="status-overlay">
+            <div class="status-content">
+                <div class="spinner"></div>
+                <p id="status-text">Connecting...</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- PeerJS CDN -->
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    <script src="game.js"></script>
+</body>
+</html>
