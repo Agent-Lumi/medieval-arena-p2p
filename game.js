@@ -183,10 +183,12 @@ async function createGame() {
     
     try {
         state.isHost = true;
-        state.roomCode = generateRoomCode();
         
-        // Initialize peer with room code as ID
-        state.peer = await initPeer(state.roomCode);
+        // Initialize peer WITHOUT custom ID (let PeerServer assign one)
+        state.peer = await initPeer();
+        
+        // Use the auto-generated peer ID as the room code
+        state.roomCode = state.myPeerId.substring(0, 8).toUpperCase();
         
         // Create local player
         createLocalPlayer();
@@ -200,6 +202,7 @@ async function createGame() {
         switchScreen('lobby');
         
         addSystemMessage('Game created! Share the room code with friends.');
+        console.log('Host ready! Room code:', state.roomCode, 'Peer ID:', state.myPeerId);
         
     } catch (err) {
         console.error('Failed to create game:', err);
@@ -212,8 +215,8 @@ async function createGame() {
 async function joinGame() {
     const code = elements.roomCodeInput.value.trim().toUpperCase();
     
-    if (!code || code.length !== 6) {
-        alert('Please enter a valid 6-character room code');
+    if (!code || code.length < 6) {
+        alert('Please enter a valid room code');
         return;
     }
     
@@ -226,8 +229,14 @@ async function joinGame() {
         // Initialize peer
         state.peer = await initPeer();
         
-        // Wait a moment for peer to be fully ready
-        await new Promise(resolve => setTimeout(resolve, 500));
+        // Wait for peer to be fully ready
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        // The "room code" is actually the host's Peer ID
+        // Try to connect directly using the full code
+        const hostId = code;
+        
+        console.log('Attempting to connect to host:', hostId);
         
         // Try to connect with retry logic
         let conn = null;
@@ -237,13 +246,12 @@ async function joinGame() {
         
         while (!connected && attempts < maxAttempts) {
             attempts++;
-            console.log(`Connection attempt ${attempts}/${maxAttempts}...`);
+            console.log(`Connection attempt ${attempts}/${maxAttempts} to ${hostId}...`);
             
             try {
-                conn = state.peer.connect(code, {
+                conn = state.peer.connect(hostId, {
                     reliable: true,
-                    serialization: 'json',
-                    metadata: { playerId: state.myPeerId }
+                    serialization: 'json'
                 });
                 
                 // Wait for connection with timeout
@@ -274,20 +282,20 @@ async function joinGame() {
         }
         
         if (!connected) {
-            throw new Error('Failed to connect after multiple attempts');
+            throw new Error('Could not connect to host. Make sure the room code is correct and the host is still online.');
         }
         
         // Connection established
-        console.log('Connected to host:', code);
-        state.connections.set(code, conn);
+        console.log('Connected to host:', hostId);
+        state.connections.set(hostId, conn);
         
         // Setup connection handlers
         conn.on('data', (data) => {
-            handlePeerData(code, data);
+            handlePeerData(hostId, data);
         });
         
         conn.on('close', () => {
-            handlePeerDisconnect(code);
+            handlePeerDisconnect(hostId);
         });
         
         conn.on('error', (err) => {
@@ -298,7 +306,7 @@ async function joinGame() {
         createLocalPlayer();
         
         // Send join request
-        sendToPeer(code, {
+        sendToPeer(hostId, {
             type: 'player_join',
             data: {
                 id: state.myPeerId,
@@ -317,7 +325,7 @@ async function joinGame() {
         
     } catch (err) {
         console.error('Failed to join game:', err);
-        showStatus('Failed to connect. Check the room code and try again.');
+        showStatus(err.message || 'Failed to connect. Check the room code and try again.');
         setTimeout(() => {
             hideStatus();
             cleanup();
