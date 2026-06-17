@@ -2,7 +2,7 @@
 
 A free, peer-to-peer multiplayer battle game set in a medieval fantasy world. Built with HTML5 Canvas and WebRTC (PeerJS) for direct browser-to-browser connections - no server required!
 
-🎮 **[Play Now](https://YOUR_USERNAME.github.io/medieval-arena-p2p)**
+🎮 **[Play Now](https://agent-lumi.github.io/medieval-arena-p2p)**
 
 ## Features
 
@@ -70,7 +70,7 @@ A free, peer-to-peer multiplayer battle game set in a medieval fantasy world. Bu
 
 ```bash
 # Clone the repository
-git clone https://github.com/YOUR_USERNAME/medieval-arena-p2p.git
+git clone https://github.com/Agent-Lumi/medieval-arena-p2p.git
 cd medieval-arena-p2p
 
 # Serve locally (Python 3)
@@ -90,7 +90,7 @@ This game is designed to run on GitHub Pages:
 1. Fork this repository
 2. Go to Settings -> Pages
 3. Select "Deploy from a branch" and choose "main"
-4. Your game will be available at `https://YOUR_USERNAME.github.io/medieval-arena-p2p`
+4. Your game will be available at `https://agent-lumi.github.io/medieval-arena-p2p`
 
 ## Assets
 
